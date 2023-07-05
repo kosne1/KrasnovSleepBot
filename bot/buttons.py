@@ -11,23 +11,24 @@ buttons_start: list[list[KeyboardButton]] = [
 ]
 keyboard_start_buttons: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=buttons_start,
                                                                   resize_keyboard=True)
+
 inline_button_yes: InlineKeyboardButton = InlineKeyboardButton(text='Да',
                                                                callback_data='inline_button_yes_press')
 inline_button_no: InlineKeyboardButton = InlineKeyboardButton(text='Нет',
                                                               callback_data='inline_button_no_press')
+
 boolean_buttons: list[list[InlineKeyboardButton]] = [[inline_button_yes, inline_button_no]]
+
 keyboard_boolean_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=boolean_buttons,
                                                                       resize_keyboard=True)
-inline_button_yes: InlineKeyboardButton = InlineKeyboardButton(text='Да',
-                                                               callback_data='inline_button_yes_press')
+
 inline_button_not_first: InlineKeyboardButton = InlineKeyboardButton(text='Да, но не с первым звонком',
                                                                      callback_data='inline_button_not_first_press')
 inline_button_earlier: InlineKeyboardButton = InlineKeyboardButton(text='Нет, раньше будильника',
-                                                                  callback_data='inline_button_earlier_press')
+                                                                   callback_data='inline_button_earlier_press')
 inline_button_late: InlineKeyboardButton = InlineKeyboardButton(text='Нет, проспал\проспала',
                                                                 callback_data='inline_button_late_pressed')
-inline_button_no: InlineKeyboardButton = InlineKeyboardButton(text='Нет',
-                                                              callback_data='inline_button_no_press')
+
 by_alarm_buttons: list[list[InlineKeyboardButton]] = [
     [inline_button_yes, inline_button_no],
     [inline_button_not_first],
@@ -37,3 +38,15 @@ by_alarm_buttons: list[list[InlineKeyboardButton]] = [
 keyboard_by_alarm_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=by_alarm_buttons,
                                                                        resize_keyboard=True)
 
+
+def callback_data_to_text(callback_data: str) -> str:
+    if callback_data == 'inline_button_yes_press':
+        return 'Да'
+    elif callback_data == 'inline_button_no_press':
+        return 'Нет'
+    elif callback_data == 'inline_button_not_first_press':
+        return 'Да, но не с первым звонком'
+    elif callback_data == 'inline_button_earlier_press':
+        return 'Нет, раньше будильника'
+    elif callback_data == 'inline_button_late_pressed':
+        return 'Нет, проспал\проспала'
