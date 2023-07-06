@@ -62,8 +62,6 @@ async def start(message: types.Message):
             reply_markup=keyboard_start_buttons)
         await FSMFillDiary.previous()
 
-
-
     def check_notification():
         notification_hours = [9, 12, 20]
         current_hour = datetime.datetime.today().hour
