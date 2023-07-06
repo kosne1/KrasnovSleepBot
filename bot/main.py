@@ -9,6 +9,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from aiogram.types.reply_keyboard import ReplyKeyboardRemove
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from buttons import *
 from config import BOT_TOKEN
@@ -46,12 +47,27 @@ class FSMFillDiary(StatesGroup):
 
 last_fill_timestamp = {}
 
-
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
     await message.answer(
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nВыберите одну из опций''',
         reply_markup=keyboard_start_buttons)
+
+
+    def check_notification():
+        notification_hours = [9, 12, 20]
+        current_hour = datetime.datetime.today().hour
+        today_timestamp = int(
+            datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
+
+        if current_hour in notification_hours:
+            for chat_id in last_fill_timestamp:
+                if last_fill_timestamp[chat_id] < today_timestamp:
+                    bot.send_message(chat_id=chat_id, text='Пожалуйста, заполните дневник сна')
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(check_notification, 'interval', minutes=60)
+    scheduler.start()
 
     @dp.message_handler(Text('Заполнить дневник сна'))
     async def start_filling_diary(message: Message):
@@ -219,6 +235,7 @@ async def start(message: types.Message):
                                reply_markup=keyboard_start_buttons)
 
         current_state = await state.get_state()
+
         if current_state is not None:
             await state.finish()
 
