@@ -61,10 +61,7 @@ async def start(message: types.Message):
             text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nНапишите ваше ФИО''',
             reply_markup=keyboard_start_buttons)
         await FSMFillDiary.previous()
-    @dp.callback_query_handler(Text(['button_start_fill_pressed']), state='*')
-    async def start_filling_diary(callback: CallbackQuery):
-        text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nВыберите одну из опций''',
-        reply_markup=keyboard_start_buttons)
+
 
 
     def check_notification():
@@ -89,18 +86,16 @@ async def start(message: types.Message):
         today_timestamp = int(
             datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
         print(today_timestamp)
-        if str(callback.message.chat.id) in last_fill_timestamp:
-            if today_timestamp < int(last_fill_timestamp[str(callback.message.chat.id)]):
-                await callback.message.answer(
+        if str(message.chat.id) in last_fill_timestamp:
+            if today_timestamp < int(last_fill_timestamp[str(message.chat.id)]):
+                await message.answer(
                     text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
                 return
 
         await FSMFillDiary.fill_quality_sleep.set()
-        await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
+        await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
                                       reply_markup=ReplyKeyboardRemove())
-    async def rememberer9():
-        await bot.send_message(ADMIN_CHAT_ID,
-                               text='Не забудьте заполнить дневник')
+
     @dp.callback_query_handler(Text(['button_start_help_pressed']), state='*')
     async def write_to_sasha(callback: CallbackQuery):
         await callback.message.answer(text='https://t.me/sasha_krasnow')
