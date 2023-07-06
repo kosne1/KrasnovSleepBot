@@ -42,7 +42,9 @@ class FSMFillDiary(StatesGroup):
     fill_coffein_after_14 = State()
     fill_use_other_stimulators = State()
     fill_comment = State()
-    last_fill_timestap = State()
+
+
+last_fill_timestamp = {}
 
 
 @dp.message_handler(commands='start')
@@ -53,19 +55,21 @@ async def start(message: types.Message):
 
     @dp.message_handler(Text('Заполнить дневник сна'))
     async def start_filling_diary(message: Message):
-        print(storage.data)
-        session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
-        if 'last_fill_timestap' in session:
-            if int(datetime.datetime.today().timestamp()) < int(session['last_fill_timestap']):
+        print(last_fill_timestamp)
+
+        today_timestamp = int(
+            datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
+        print(today_timestamp)
+        if str(message.chat.id) in last_fill_timestamp:
+            if today_timestamp < int(last_fill_timestamp[str(message.chat.id)]):
                 await message.answer(
                     text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''',
                     reply_markup=keyboard_start_buttons)
                 return
 
         await FSMFillDiary.fill_quality_sleep.set()
-        await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10 ?',
+        await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
                              reply_markup=ReplyKeyboardRemove())
-        print(session)
 
     @dp.message_handler(state='*', commands='cancel')
     @dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
@@ -207,8 +211,9 @@ async def start(message: types.Message):
 
     @dp.callback_query_handler(state=FSMFillDiary.fill_wakingup_by_alam)
     async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
-        await state.update_data(fill_wakingup_by_alam=callback_data_to_text(str(callback.data)),
-                                last_fill_timestap=int(time.time()))
+        await state.update_data(fill_wakingup_by_alam=callback_data_to_text(str(callback.data)))
+        last_fill_timestamp[str(callback.message.chat.id)] = int(time.time())
+
         await bot.send_message(callback.message.chat.id,
                                text='Спасибо за ваше пробуждение',
                                reply_markup=keyboard_start_buttons)
@@ -217,7 +222,7 @@ async def start(message: types.Message):
         if current_state is not None:
             await state.finish()
 
-        print(storage.data[str(callback.message.chat.id)][str(callback.message.chat.id)]['data'])
+        print(last_fill_timestamp)
 
 
 if __name__ == "__main__":
