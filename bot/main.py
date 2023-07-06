@@ -43,22 +43,37 @@ class FSMFillDiary(StatesGroup):
     fill_coffein_after_14 = State()
     fill_use_other_stimulators = State()
     fill_comment = State()
-
+class FSMFillName(StatesGroup):
+    name = State()
+    keyboard = State()
 
 last_fill_timestamp = {}
-
+all_users = {}
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
     await message.answer(
-        text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nНапишите ваше ФИО''')
-    await message.answer(text='Выберите одну из опций',
-                         reply_markup=keyboard_start_buttons)
-
+        text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
+    if message.chat.id not in all_users:
+        await message.answer('Введите ваше ФИО')
+        await FSMFillName.name.set()
+        @dp.message_handler(state=FSMFillName.name)
+        async def set_name(message: Message, state: FSMContext):
+            await message.answer('Ваше имя установлено, для продолжения нажмите /continue')
+            await state.finish()
+    else:
+        await message.answer(
+            text='''Выберите одну из опций''',
+            reply_markup=keyboard_start_buttons)
+    @dp.message_handler(commands='continue')
+    async def start(message: Message):
+        await message.answer(
+            text='''Выберите одну из опций''',
+            reply_markup=keyboard_start_buttons)
     @dp.callback_query_handler(Text(['button_back_pressed']), state='*')
     async def button_back_pressed(callback: CallbackQuery):
         await callback.message.answer(
-            text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nНапишите ваше ФИО''',
+            text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''',
             reply_markup=keyboard_start_buttons)
         await FSMFillDiary.previous()
 
@@ -77,22 +92,26 @@ async def start(message: types.Message):
     scheduler.add_job(check_notification, 'interval', minutes=60)
     scheduler.start()
 
-    @dp.message_handler(Text('Заполнить дневник сна'))
-    async def start_filling_diary(message: Message):
+    @dp.callback_query_handler(Text(['button_start_fill_pressed']))
+    async def start_filling_diary(callback: CallbackQuery):
         print(last_fill_timestamp)
-
-        today_timestamp = int(
-            datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-        print(today_timestamp)
-        if str(message.chat.id) in last_fill_timestamp:
-            if today_timestamp < int(last_fill_timestamp[str(message.chat.id)]):
-                await message.answer(
-                    text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
-                return
-
         await FSMFillDiary.fill_quality_sleep.set()
-        await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
-                                      reply_markup=ReplyKeyboardRemove())
+        await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?')
+
+    @dp.message_handler(state=FSMFillName.name)
+    async def naming(message1: Message, state: FSMContext):
+        all_users[f'{message1.from_user.id}'] = f'{message1.text}'
+        await state.update_data(name=str(message.text))
+        await state.finish()
+
+    today_timestamp = int(
+        datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
+    print(today_timestamp)
+    if str(message.chat.id) in last_fill_timestamp:
+        if today_timestamp < int(last_fill_timestamp[str(message.chat.id)]):
+            await message.answer(
+                text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
+            return
 
     @dp.callback_query_handler(Text(['button_start_help_pressed']), state='*')
     async def write_to_sasha(callback: CallbackQuery):
@@ -104,7 +123,7 @@ async def start(message: types.Message):
 
     @dp.callback_query_handler(Text(['button_start_donate_pressed']), state='*')
     async def write_to_sasha(callback: CallbackQuery):
-        await callback.message.answer(text='`2202202317987984')
+        await callback.message.answer(text='2202202317987984')
 
     @dp.message_handler(state='*', commands='cancel')
     @dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
@@ -355,14 +374,35 @@ async def start(message: types.Message):
     @dp.message_handler(state=FSMFillDiary.fill_comment)
     async def process_turn_to_next_step(message: types.Message, state: FSMContext):
         await state.update_data(fill_comment=str(message.text))
-        await message.answer('Сколько раз вы просыпались среди ночи (до окончательного утреннего пробуждения)?')
-        await FSMFillDiary.next()
+        await message.answer('Спасибо за заполнение дневника',
+                             reply_markup=keyboard_start_buttons)
+        session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
+        await bot.send_message(ADMIN_CHAT_ID,
+                               text=f'''1) Как вы оцениваете своё сегодняшнее качество сна? (здесь и далее: 10 – высшая оценка)\n------\n{session['fill_quality_sleep']}\n------
+2) Как вы оцениваете свою сонливость вчера в течение дня?\n------\n{session['fill_drowsiness']}\n------
+3) Как вы оцениваете своё настроение вчера в течение дня?\n------\n{session['fill_mood']}\n------
+4) Как вы оцениваете своё состояние (бодрость, активность) наутро?\n------\n{session['fill_selffeeling_morning']}\n------
+5) Во сколько вы вчера легли в кровать?\n------\n{session['fill_time_turn_bed']}\n------
+6) Во сколько вы выключили свет и решили заснуть?\n------\n{session['fill_time_turnoff_ligth']}\n------
+7) Сколько примерно у вас ушло времени, чтобы заснуть (в минутах)?\n------\n{session['fill_time_start_sleep_minutes']}\n------
+8) Сколько раз вы просыпались среди ночи (до окончательного утреннего пробуждения)?\n------\n{session['fill_how_many_wakingups']}\n------
+9) Сколько времени примерно суммарно длились эти пробуждения (в минутах)?\n------\n{session['fill_sum_wakingups_time_minutes']}\n------
+10) Во сколько было ваше финальное пробуждение?\n------\n{session['fill_time_final_wakingup']}\n------
+11) Вы проснулись раньше, чем планировалось?\n------\n{session['fill_wakingup_earlier']}\n------
+12) Вы проснулись по будильнику?\n------\n{session['fill_wakingup_by_alam']}\n------
+13) Сколько времени за прошедшую ночь вы спали (по ощущениям)?\n------\n{session['fill_time_sleeping_night']}\n------
+14) Сколько времени вы спали вчера днём?\n------\n{session['fill_time_sleeping_day']}\n------
+15) Занимались ли вы вчера спортом?\n------\n{session['fill_did_sport']}\n------
+16) Пили ли вы вчера алкоголь?\n------\n{session['fill_drink_alcohol']}\n------\n------\n{session['fill_did_sport']}\n------
+17) Приходилось ли вчера использовать снотворные, включая мелатонин?\n------\n{session['fill_use_hypnotic']}\n------
+18) Курили ли вы вчера марихуану или употребляли CBD?\n------\n{session['fill_use_narcos']}\n------
+19) Занимались ли вы вчера в течение дня медитацией\дыхательными\ другими релаксационными практиками?\n------\n{session['fill_meditate']}\n------
+20) Пили ли Вы вчера напитки с кофеином до 14 часов дня?\n------\n{session['fill_coffein_before_14']}\n------
+21) Пили ли Вы вчера напитки с кофеином после 14 часов дня?\n------\n{session['fill_coffein_after_14']}\n------
+22) Принимали ли Вы другие стимуляторы?\n------\n{session['fill_use_other_stimulators']}\n------
+23) Оставить комментарий (факторы, которые могли повлиять на сон):\n------\n{session['fill_comment']}\n------''')
 
         last_fill_timestamp[str(message.chat.id)] = int(time.time())
-
-        await bot.send_message(message.chat.id,
-                               text='Спасибо за заполнение дневника',
-                               reply_markup=keyboard_start_buttons)
 
         current_state = await state.get_state()
         if current_state is not None:
