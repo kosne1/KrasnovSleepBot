@@ -2,7 +2,7 @@
 import datetime
 import time
 
-from prisma import Client
+from schedule import schedule
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -11,14 +11,13 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 
-from db import init_user
 from buttons import *
 from config import BOT_TOKEN, ADMIN_CHAT_ID
 
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
-db = Client()
+
 
 class FSMFillDiary(StatesGroup):
     fill_quality_sleep = State()
@@ -53,15 +52,6 @@ last_fill_timestamp = {}
 async def start(message: types.Message):
     await message.answer(
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!\n\nНапишите ваше ФИО''')
-    await init_user(message)
-    await db.user.update(
-        where={
-            'chatId': message.chat.id
-        },
-        data={
-            'FIO': str(message.text)
-        }
-    )
     await message.answer(text='Выберите одну из опций',
                          reply_markup=keyboard_start_buttons)
 
@@ -88,7 +78,8 @@ async def start(message: types.Message):
         await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
                                       reply_markup=ReplyKeyboardRemove())
     async def rememberer9():
-        datetime.datetime.time()
+        await bot.send_message(ADMIN_CHAT_ID,
+                               text='Не забудьте заполнить дневник')
     @dp.callback_query_handler(Text(['button_start_help_pressed']), state='*')
     async def write_to_sasha(callback: CallbackQuery):
         await callback.message.answer(text='https://t.me/sasha_krasnow')
@@ -392,4 +383,5 @@ async def start(message: types.Message):
 
 
 if __name__ == "__main__":
+    schedule.every().day.at("11:38").UTC("+04:00").do(function_to_run)
     executor.start_polling(dp, skip_updates=False)
