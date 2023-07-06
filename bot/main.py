@@ -12,7 +12,7 @@ from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from buttons import *
-from config import BOT_TOKEN, ADMIN_CHAT_ID
+from config import BOT_TOKEN
 
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
@@ -92,7 +92,7 @@ async def start(message: types.Message):
 
         await FSMFillDiary.fill_quality_sleep.set()
         await message.answer(text='Как вы оцениваете своё сегодняшнее качество сна от 1 до 10?',
-                                      reply_markup=ReplyKeyboardRemove())
+                             reply_markup=ReplyKeyboardRemove())
 
     @dp.callback_query_handler(Text(['button_start_help_pressed']), state='*')
     async def write_to_sasha(callback: CallbackQuery):
@@ -284,6 +284,7 @@ async def start(message: types.Message):
         state=FSMFillDiary.fill_time_sleeping_day)
     async def process_answer_24_format_invalid(message: Message):
         return await message.reply("В ответ введите время в 24-х часовом формате, например 00:00")
+
     @dp.message_handler(
         lambda message: 0 <= int(message.text.split(':')[0]) <= 23 and 0 <= int(message.text.split(':')[1]) <= 59,
         state=FSMFillDiary.fill_time_sleeping_day)
@@ -324,6 +325,7 @@ async def start(message: types.Message):
                                text='Занимались ли вы вчера в течение дня медитацией\дыхательными\другими релаксационными практиками?',
                                reply_markup=keyboard_boolean_buttons)
         await FSMFillDiary.next()
+
     @dp.callback_query_handler(state=FSMFillDiary.fill_meditate)
     async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
         await state.update_data(fill_meditate=callback_data_to_text(str(callback.data)))
@@ -331,6 +333,7 @@ async def start(message: types.Message):
                                text='Пили ли Вы вчера напитки с кофеином до 14 часов дня?',
                                reply_markup=keyboard_boolean_buttons)
         await FSMFillDiary.next()
+
     @dp.callback_query_handler(state=FSMFillDiary.fill_coffein_before_14)
     async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
         await state.update_data(fill_coffein_before_14=callback_data_to_text(str(callback.data)))
@@ -338,6 +341,7 @@ async def start(message: types.Message):
                                text='Пили ли Вы вчера напитки с кофеином после 14 часов дня?',
                                reply_markup=keyboard_boolean_buttons)
         await FSMFillDiary.next()
+
     @dp.callback_query_handler(state=FSMFillDiary.fill_coffein_after_14)
     async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
         await state.update_data(fill_coffein_after_14=callback_data_to_text(str(callback.data)))
@@ -345,6 +349,7 @@ async def start(message: types.Message):
                                text='Принимали ли Вы другие стимуляторы?',
                                reply_markup=keyboard_boolean_buttons)
         await FSMFillDiary.next()
+
     @dp.callback_query_handler(state=FSMFillDiary.fill_use_other_stimulators)
     async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
         await state.update_data(fill_use_other_stimulators=callback_data_to_text(str(callback.data)))

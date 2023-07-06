@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 button_start_fill: InlineKeyboardButton = InlineKeyboardButton(text='Заполнить дневник сна',
                                                                callback_data='button_start_fill_pressed')
@@ -7,7 +7,7 @@ button_start_help: InlineKeyboardButton = InlineKeyboardButton(text='Напис�
 button_start_book: InlineKeyboardButton = InlineKeyboardButton(text='Выбрать книжку',
                                                                callback_data='button_start_book_pressed')
 button_start_donate: InlineKeyboardButton = InlineKeyboardButton(text='Задонатить',
-                                                               callback_data='button_start_donate_pressed')
+                                                                 callback_data='button_start_donate_pressed')
 button_back: InlineKeyboardButton = InlineKeyboardButton(text='Назад',
                                                          callback_data='button_back_pressed')
 
