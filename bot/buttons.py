@@ -1,23 +1,38 @@
 from aiogram.types import InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup
 
-button_start_fill: KeyboardButton = KeyboardButton(text='Заполнить дневник сна')
-button_start_help: KeyboardButton = KeyboardButton(text='Написать Саше')
-button_start_book: KeyboardButton = KeyboardButton(text='Выбрать книжку')
-button_start_donate: KeyboardButton = KeyboardButton(text='Задонатить')
+button_start_fill: InlineKeyboardButton = InlineKeyboardButton(text='Заполнить дневник сна',
+                                                               callback_data='button_start_fill_pressed')
+button_start_help: InlineKeyboardButton = InlineKeyboardButton(text='Написать Саше',
+                                                               callback_data='button_start_help_pressed')
+button_start_book: InlineKeyboardButton = InlineKeyboardButton(text='Выбрать книжку',
+                                                               callback_data='button_start_book_pressed')
+button_start_donate: InlineKeyboardButton = InlineKeyboardButton(text='Задонатить',
+                                                               callback_data='button_start_donate_pressed')
+button_back: InlineKeyboardButton = InlineKeyboardButton(text='Назад',
+                                                         callback_data='button_back_pressed')
 
-buttons_start: list[list[KeyboardButton]] = [
+buttons_start: list[list[InlineKeyboardButton]] = [
     [button_start_fill, button_start_help],
     [button_start_book, button_start_donate]
 ]
-keyboard_start_buttons: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=buttons_start,
-                                                                  resize_keyboard=True)
+buttons_back: list[list[InlineKeyboardButton]] = [
+    [button_back]
+]
+keyboard_buttons_back: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=buttons_back,
+                                                                   resize_keyboard=True)
+
+keyboard_start_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=buttons_start,
+                                                                    resize_keyboard=True)
 
 inline_button_yes: InlineKeyboardButton = InlineKeyboardButton(text='Да',
                                                                callback_data='inline_button_yes_press')
 inline_button_no: InlineKeyboardButton = InlineKeyboardButton(text='Нет',
                                                               callback_data='inline_button_no_press')
 
-boolean_buttons: list[list[InlineKeyboardButton]] = [[inline_button_yes, inline_button_no]]
+boolean_buttons: list[list[InlineKeyboardButton]] = [
+    [inline_button_yes, inline_button_no],
+    [button_back]
+]
 
 keyboard_boolean_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=boolean_buttons,
                                                                       resize_keyboard=True)
@@ -33,7 +48,8 @@ by_alarm_buttons: list[list[InlineKeyboardButton]] = [
     [inline_button_yes, inline_button_no],
     [inline_button_not_first],
     [inline_button_earlier],
-    [inline_button_late]
+    [inline_button_late],
+    [button_back]
 ]
 keyboard_by_alarm_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=by_alarm_buttons,
                                                                        resize_keyboard=True)
