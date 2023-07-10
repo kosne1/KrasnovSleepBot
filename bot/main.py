@@ -64,18 +64,18 @@ async def on_startup(_dp):
 async def start(message: types.Message):
     await message.answer(
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
-    if message.from_user.username not in all_users:
+    if message.from_user.id not in all_users:
         await message.answer('Введите ваше ФИО')
         await FSMFillName.name.set()
-        if message.from_user.username in all_users:
-            print(all_users[f'{message.from_user.username}'])
+        if message.from_user.id in all_users:
+            print(all_users[f'{message.from_user.id}'])
 
         @dp.message_handler(state=FSMFillName.name)
         async def set_name(message: Message):
-            all_users[f'{message.from_user.username}'] = message.text
+            all_users[f'{message.from_user.id}'] = message.text
             await message.answer('Выберите одну из опций',
                                  reply_markup=keyboard_start_buttons)
-            print(all_users[f'{message.from_user.username}'])
+            print(all_users[f'{message.from_user.id}'])
     else:
         await message.answer(
             text='''Выберите одну из опций''',
@@ -95,21 +95,24 @@ async def start(message: types.Message):
             datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
 
         if current_hour in notification_hours:
-            for username in last_fill_timestamp:
-                if last_fill_timestamp[username] < today_timestamp:
-                    bot.send_message(chat_id=username, text='Пожалуйста, заполните дневник сна')
+            for id in last_fill_timestamp:
+                if last_fill_timestamp[id] < today_timestamp:
+                    bot.send_message(chat_id=id, text='Пожалуйста, заполните дневник сна')
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_notification, 'interval', minutes=60)
     scheduler.start()
-    today_timestamp = int(
-        datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-    print(today_timestamp)
+
     @dp.callback_query_handler(Text(['button_start_fill_pressed']), state='*')
     async def start_filling_diary(callback: CallbackQuery):
-        if str(message.from_user.username) in last_fill_timestamp:
-            if today_timestamp <= int(last_fill_timestamp[str(message.from_user.username)]):
-                await message.answer(
+        today_timestamp = int(
+            datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
+        print('первый лог', today_timestamp)
+        print('логирую user.id', str(message.from_user.id))
+        if str(message.from_user.id) in last_fill_timestamp:
+            print('второй лог', time.time())
+            if today_timestamp < int(last_fill_timestamp[str(message.from_user.id)]):
+                await callback.message.answer(
                     text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
                 return
         print(last_fill_timestamp)
@@ -219,7 +222,7 @@ async def start(message: types.Message):
         else:
             await state.update_data(fill_mood=callback_data_to_text(str(query.data)))
         await FSMFillDiary.next()
-        await message.answer('Как вы оцениваете своё состояние (бодрость, активность) наутро?',
+        await query.message.answer('Как вы оцениваете своё состояние (бодрость, активность) наутро?',
                              reply_markup=keyboard_buttons_answer)
 
     @dp.callback_query_handler(lambda query: query.data.startswith('button_answer_num_'),
@@ -247,7 +250,7 @@ async def start(message: types.Message):
         else:
             await state.update_data(fill_selffeeling_morning=callback_data_to_text(str(query.data)))
         await FSMFillDiary.next()
-        await message.answer('Во сколько вы вчера легли в кровать?(В ответ напишите время в формате 00:00)',
+        await query.message.answer('Во сколько вы вчера легли в кровать?(В ответ напишите время в формате 00:00)',
                              reply_markup=keyboard_buttons_back)
 
     @dp.message_handler(
@@ -449,7 +452,7 @@ async def start(message: types.Message):
         session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
         print(session)
         await bot.send_message(ADMIN_CHAT_ID,
-                               text=f'''Дневник сна заполнен пользователем по имени {all_users[f'{message.from_user.username}']}, юзернейм: @{message.from_user.username}\n------
+                               text=f'''Дневник сна заполнен пользователем по имени {all_users[f'{message.from_user.id}']}, юзернейм: @{message.from_user.username}\n------
 1) Как вы оцениваете своё сегодняшнее качество сна? (здесь и далее: 10 – высшая оценка)\n------\n{session['fill_quality_sleep']}\n------
 2) Как вы оцениваете свою сонливость вчера в течение дня?\n------\n{session['fill_drowsiness']}\n------
 3) Как вы оцениваете своё настроение вчера в течение дня?\n------\n{session['fill_mood']}\n------
@@ -474,7 +477,7 @@ async def start(message: types.Message):
 22) Принимали ли Вы другие стимуляторы?\n------\n{session['fill_use_other_stimulators']}\n------
 23) Оставить комментарий (факторы, которые могли повлиять на сон):\n------\n{session['fill_comment']}\n------''')
 
-        last_fill_timestamp[str(message.from_user.username)] = int(time.time())
+        last_fill_timestamp[str(message.from_user.id)] = int(datetime.datetime.now().timestamp())
 
         current_state = await state.get_state()
         if current_state is not None:
