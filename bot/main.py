@@ -61,6 +61,7 @@ async def on_startup(_dp):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
+    print(message.chat.id)
     await message.answer(
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
     if str(message.from_user.id) not in all_users:
@@ -512,9 +513,9 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
 11) Вы проснулись раньше, чем планировалось?\n------\n{session['fill_wakingup_earlier']}\n------
 12) Вы проснулись по будильнику?\n------\n{session['fill_wakingup_by_alam']}\n------
 13) Сколько времени за прошедшую ночь вы спали (по ощущениям)?\n------\n{session['fill_time_sleeping_night']}\n------
-14) Сколько времени вы спали вчера днём?\n------\n{session['fill_time_sleeping_day']}\n------
+14) Сколько времени вы спали вчера днём? (в минутах)\n------\n{session['fill_time_sleeping_day']}\n------
 15) Занимались ли вы вчера спортом?\n------\n{session['fill_did_sport']}\n------
-16) Пили ли вы вчера алкоголь?\n------\n{session['fill_drink_alcohol']}\n------\n------\n{session['fill_did_sport']}\n------
+16) Пили ли вы вчера алкоголь?\n------\n{session['fill_drink_alcohol']}\n------
 17) Приходилось ли вчера использовать снотворные, включая мелатонин?\n------\n{session['fill_use_hypnotic']}\n------
 18) Курили ли вы вчера марихуану или употребляли CBD?\n------\n{session['fill_use_narcos']}\n------
 19) Занимались ли вы вчера в течение дня медитацией\дыхательными\ другими релаксационными практиками?\n------\n{session['fill_meditate']}\n------
