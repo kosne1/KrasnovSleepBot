@@ -1,2 +1,4 @@
-BOT_TOKEN = '6387685108:AAE41ovyZQiTSzU90EapEVv6WddgZcUr4sY'
-ADMIN_CHAT_ID = 1054404991
+import os
+
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+ADMIN_CHAT_ID = os.environ.get('ADMIN_CHAT_ID')

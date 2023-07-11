@@ -61,16 +61,11 @@ async def on_startup(_dp):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
-    print(message.chat.id)
     await message.answer(
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
     if str(message.from_user.id) not in all_users:
-        print(all_users)
-        print(message.from_user.id)
         await message.answer('Введите ваше ФИО')
         await FSMFillName.name.set()
-        if message.from_user.id in all_users:
-            print(all_users[f'{message.from_user.id}'])
     else:
         await message.answer(
             text='''Выберите одну из опций''',
@@ -80,11 +75,8 @@ async def start(message: types.Message):
 @dp.message_handler(state=FSMFillName.name)
 async def set_name(message: Message, state: FSMContext):
     all_users[f'{message.from_user.id}'] = message.text
-    print('в словарь попало имя', all_users[f'{message.from_user.id}'])
     await message.answer('Выберите одну из опций',
                          reply_markup=keyboard_start_buttons)
-    print(all_users[f'{message.from_user.id}'])
-    print('лог id от выбора опций', message.from_user.id)
     current_state = await state.get_state()
     if current_state is not None:
         await state.finish()
@@ -118,16 +110,11 @@ scheduler.start()
 async def start_filling_diary(callback: CallbackQuery):
     today_timestamp = int(
         datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-    print(callback.from_user, 108)
-    print('текущий словарь', all_users)
-    print('логирую user.id', str(callback.from_user.id))
     if str(callback.from_user.id) in last_fill_timestamp:
-        print('второй лог', time.time())
         if today_timestamp < int(last_fill_timestamp[str(callback.from_user.id)]):
             await callback.answer(  # здесь происходит ебейший калбек.ансуэр
                 text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
             return
-    print(last_fill_timestamp)
     await FSMFillDiary.fill_quality_sleep.set()
     await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна?',
                                   reply_markup=keyboard_buttons_answer)
@@ -398,7 +385,7 @@ async def process_answer_24_format_invalid(message: Message):
     state=FSMFillDiary.fill_time_sleeping_night)
 async def process_turn_to_next_step(message: Message, state: FSMContext):
     await state.update_data(fill_time_sleeping_night=str(message.text))
-    await message.answer(text='Сколько времени вы спали вчера днём ?')
+    await message.answer(text='Сколько времени вы спали вчера днём ? (в минутах)')
     await FSMFillDiary.next()
 
 
@@ -496,39 +483,37 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await message.answer('Спасибо за заполнение дневника',
                          reply_markup=keyboard_start_buttons)
     session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
-    print(session)
     await bot.send_message(ADMIN_CHAT_ID,
                            text=f'''Дневник сна заполнен пользователем по имени {all_users[f'{message.from_user.id}']}, юзернейм: @{message.from_user.username}\n------
-1) Как вы оцениваете своё сегодняшнее качество сна? (здесь и далее: 10 – высшая оценка)\n------\n{session['fill_quality_sleep']}\n------
-2) Как вы оцениваете свою сонливость вчера в течение дня?\n------\n{session['fill_drowsiness']}\n------
-3) Как вы оцениваете своё настроение вчера в течение дня?\n------\n{session['fill_mood']}\n------
-4) Как вы оцениваете своё состояние (бодрость, активность) наутро?\n------\n{session['fill_selffeeling_morning']}\n------
-5) Во сколько вы вчера легли в кровать?\n------\n{session['fill_time_turn_bed']}\n------
-6) Во сколько вы выключили свет и решили заснуть?\n------\n{session['fill_time_turnoff_ligth']}\n------
-7) Сколько примерно у вас ушло времени, чтобы заснуть (в минутах)?\n------\n{session['fill_time_start_sleep_minutes']}\n------
-8) Сколько раз вы просыпались среди ночи (до окончательного утреннего пробуждения)?\n------\n{session['fill_how_many_wakingups']}\n------
-9) Сколько времени примерно суммарно длились эти пробуждения (в минутах)?\n------\n{session['fill_sum_wakingups_time_minutes']}\n------
-10) Во сколько было ваше финальное пробуждение?\n------\n{session['fill_time_final_wakingup']}\n------
-11) Вы проснулись раньше, чем планировалось?\n------\n{session['fill_wakingup_earlier']}\n------
-12) Вы проснулись по будильнику?\n------\n{session['fill_wakingup_by_alam']}\n------
-13) Сколько времени за прошедшую ночь вы спали (по ощущениям)?\n------\n{session['fill_time_sleeping_night']}\n------
-14) Сколько времени вы спали вчера днём? (в минутах)\n------\n{session['fill_time_sleeping_day']}\n------
-15) Занимались ли вы вчера спортом?\n------\n{session['fill_did_sport']}\n------
-16) Пили ли вы вчера алкоголь?\n------\n{session['fill_drink_alcohol']}\n------
-17) Приходилось ли вчера использовать снотворные, включая мелатонин?\n------\n{session['fill_use_hypnotic']}\n------
-18) Курили ли вы вчера марихуану или употребляли CBD?\n------\n{session['fill_use_narcos']}\n------
-19) Занимались ли вы вчера в течение дня медитацией\дыхательными\ другими релаксационными практиками?\n------\n{session['fill_meditate']}\n------
-20) Пили ли Вы вчера напитки с кофеином до 14 часов дня?\n------\n{session['fill_coffein_before_14']}\n------
-21) Пили ли Вы вчера напитки с кофеином после 14 часов дня?\n------\n{session['fill_coffein_after_14']}\n------
-22) Принимали ли Вы другие стимуляторы?\n------\n{session['fill_use_other_stimulators']}\n------
-23) Оставить комментарий (факторы, которые могли повлиять на сон):\n------\n{session['fill_comment']}\n------''')
+                           {session['fill_quality_sleep']}\n
+                           {session['fill_drowsiness']}\n
+                           {session['fill_mood']}\n
+                           {session['fill_selffeeling_morning']}\n
+                           {session['fill_time_turn_bed']}\n
+                           {session['fill_time_turnoff_ligth']}\n
+                           {session['fill_time_start_sleep_minutes']}\n
+                           {session['fill_how_many_wakingups']}\n
+                           {session['fill_sum_wakingups_time_minutes']}\n
+                           {session['fill_time_final_wakingup']}\n
+                            {session['fill_wakingup_earlier']}\n
+                            {session['fill_wakingup_by_alam']}\n
+                            {session['fill_time_sleeping_night']}\n
+                            {session['fill_time_sleeping_day']}\n
+                            {session['fill_did_sport']}\n
+                            {session['fill_drink_alcohol']}\n
+                            {session['fill_use_hypnotic']}\n
+                            {session['fill_use_narcos']}\n
+                            {session['fill_meditate']}\n
+                            {session['fill_coffein_before_14']}\n
+                            {session['fill_coffein_after_14']}\n
+                            {session['fill_use_other_stimulators']}\n
+                            {session['fill_comment']}''')
 
     last_fill_timestamp[str(message.from_user.id)] = int(datetime.datetime.now().timestamp())
 
     current_state = await state.get_state()
     if current_state is not None:
         await state.finish()
-    print(last_fill_timestamp)
 
 
 if __name__ == "__main__":
