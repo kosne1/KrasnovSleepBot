@@ -1,5 +1,4 @@
 import datetime
-import time
 
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -49,7 +48,7 @@ class FSMFillName(StatesGroup):
 
 last_fill_timestamp = {}
 all_users: dict = {}
-
+last_fill_timestamp['1054404991'] = 12
 
 async def on_startup(_dp):
     user_commands = [
@@ -65,6 +64,8 @@ async def start(message: types.Message):
         text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
     if str(message.from_user.id) not in all_users:
         await message.answer('Введите ваше ФИО')
+        print(last_fill_timestamp)
+        print(f'{message.from_user.id}')
         await FSMFillName.name.set()
     else:
         await message.answer(
@@ -89,16 +90,18 @@ async def button_back_pressed(callback: CallbackQuery):
         reply_markup=keyboard_start_buttons)
 
 
-def check_notification():
+async def check_notification():
     notification_hours = [9, 12, 20]
     current_hour = datetime.datetime.today().hour
     today_timestamp = int(
         datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-
     if current_hour in notification_hours:
         for id in last_fill_timestamp:
             if last_fill_timestamp[id] < today_timestamp:
-                bot.send_message(chat_id=id, text='Пожалуйста, заполните дневник сна')
+                await bot.send_message(chat_id=id, text='Пожалуйста, заполните дневник сна')
+            else:
+                print('all diaries are filled today')
+
 
 
 scheduler = AsyncIOScheduler()
