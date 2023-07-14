@@ -99,13 +99,11 @@ async def check_notification():
         for id in last_fill_timestamp:
             if last_fill_timestamp[id] < today_timestamp:
                 await bot.send_message(chat_id=id, text='Пожалуйста, заполните дневник сна')
-            else:
-                print('all diaries are filled today')
 
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(check_notification, 'interval', minutes=60)
+scheduler.add_job(check_notification, 'interval', minutes=1)
 scheduler.start()
 
 
