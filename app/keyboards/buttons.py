@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton
 
 button_start_fill: InlineKeyboardButton = InlineKeyboardButton(text='Заполнить дневник сна',
                                                                callback_data='button_start_fill_pressed')
@@ -29,7 +29,7 @@ button_answer_num_8: InlineKeyboardButton = InlineKeyboardButton(text='8',
 button_answer_num_9: InlineKeyboardButton = InlineKeyboardButton(text='9',
                                                                  callback_data='button_answer_num_9_pressed')
 button_answer_num_10: InlineKeyboardButton = InlineKeyboardButton(text='10',
-                                                                 callback_data='button_answer_num_10_pressed')
+                                                                  callback_data='button_answer_num_10_pressed')
 inline_button_yes: InlineKeyboardButton = InlineKeyboardButton(text='Да',
                                                                callback_data='inline_button_yes_press')
 inline_button_no: InlineKeyboardButton = InlineKeyboardButton(text='Нет',
@@ -64,20 +64,7 @@ by_alarm_buttons: list[list[InlineKeyboardButton]] = [
     [inline_button_late],
     [button_back]
 ]
-keyboard_by_alarm_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=by_alarm_buttons,
-                                                                       resize_keyboard=True)
-keyboard_buttons_back: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=buttons_back,
-                                                                   resize_keyboard=True)
 
-keyboard_start_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=buttons_start,
-                                                                    resize_keyboard=True)
-
-
-keyboard_boolean_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=boolean_buttons,
-                                                                      resize_keyboard=True)
-
-keyboard_buttons_answer: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=buttons_answer,
-                                                                     resize_keyboard=True)
 
 def callback_data_to_text(callback_data: str) -> str:
     if callback_data == 'inline_button_yes_press':

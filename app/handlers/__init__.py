@@ -1,81 +1,23 @@
 import datetime
 
-from aiogram import Bot, Dispatcher, types, executor
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery, BotCommand
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from aiogram.types import CallbackQuery, Message
 
-from buttons import *
-from config import BOT_TOKEN, ADMIN_CHAT_ID
-
-bot = Bot(token=BOT_TOKEN)
-storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
-
-
-class FSMFillDiary(StatesGroup):
-    fill_quality_sleep = State()
-    fill_drowsiness = State()
-    fill_mood = State()
-    fill_selffeeling_morning = State()
-    fill_time_turn_bed = State()
-    fill_time_turnoff_ligth = State()
-    fill_time_start_sleep_minutes = State()
-    fill_how_many_wakingups = State()
-    fill_sum_wakingups_time_minutes = State()
-    fill_time_final_wakingup = State()
-    fill_wakingup_earlier = State()
-    fill_wakingup_by_alam = State()
-    fill_time_sleeping_night = State()
-    fill_time_sleeping_day = State()
-    fill_did_sport = State()
-    fill_drink_alcohol = State()
-    fill_use_hypnotic = State()
-    fill_use_narcos = State()
-    fill_meditate = State()
-    fill_coffein_before_14 = State()
-    fill_coffein_after_14 = State()
-    fill_use_other_stimulators = State()
-    fill_comment = State()
-
-
-class FSMFillName(StatesGroup):
-    name = State()
-
-
-last_fill_timestamp = {}
-all_users: dict = {}
-last_fill_timestamp['1054404991'] = 12
-
-async def on_startup(_dp):
-    user_commands = [
-        BotCommand("start", "Старт"),
-        BotCommand("cancel", "Отменить заполнение дневника")
-    ]
-    await _dp.bot.set_my_commands(user_commands)
-
-
-@dp.message_handler(commands='start')
-async def start(message: types.Message):
-    await message.answer(
-        text='''Добро пожаловать в бот Dreamy, придуманный @sasha_krasnow для помощи при бессоннице!''')
-    if str(message.from_user.id) not in all_users:
-        await message.answer('Введите ваше ФИО')
-        print(last_fill_timestamp)
-        print(f'{message.from_user.id}')
-        await FSMFillName.name.set()
-    else:
-        await message.answer(
-            text='''Выберите одну из опций''',
-            reply_markup=keyboard_start_buttons)
+from app import last_fill_timestamp, bot, storage, dp
+from app.config import ADMIN_CHAT_ID
+from app.keyboards import keyboard_start_buttons, keyboard_buttons_answer, keyboard_buttons_back, \
+    keyboard_boolean_buttons, keyboard_by_alarm_buttons
+from app.keyboards.buttons import callback_data_to_text
+from app.schemas.UserSchema import User
+from app.services import user_service
+from app.states import FSMFillDiary, FSMFillName
 
 
 @dp.message_handler(state=FSMFillName.name)
 async def set_name(message: Message, state: FSMContext):
-    all_users[f'{message.from_user.id}'] = message.text
+    user_service.upsert_user(User(fullname=message.text, id=message.from_user.id, chat_id=message.chat.id))
     await message.answer('Выберите одну из опций',
                          reply_markup=keyboard_start_buttons)
     current_state = await state.get_state()
@@ -90,32 +32,12 @@ async def button_back_pressed(callback: CallbackQuery):
         reply_markup=keyboard_start_buttons)
 
 
-async def check_notification():
-    notification_hours = [9, 12, 20]
-    current_hour = datetime.datetime.today().hour
-    today_timestamp = int(
-        datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-    if current_hour in notification_hours:
-        for id in last_fill_timestamp:
-            if last_fill_timestamp[id] < today_timestamp:
-                await bot.send_message(chat_id=id, text='Пожалуйста, заполните дневник сна')
-
-
-
-scheduler = AsyncIOScheduler()
-scheduler.add_job(check_notification, 'interval', minutes=1)
-scheduler.start()
-
-
 @dp.callback_query_handler(Text(['button_start_fill_pressed']), state='*')
 async def start_filling_diary(callback: CallbackQuery):
-    today_timestamp = int(
-        datetime.datetime.today().timestamp()) - datetime.datetime.today().hour * 3600 - datetime.datetime.today().minute * 60
-    if str(callback.from_user.id) in last_fill_timestamp:
-        if today_timestamp < int(last_fill_timestamp[str(callback.from_user.id)]):
-            await callback.answer(  # здесь происходит ебейший калбек.ансуэр
-                text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
-            return
+    if user_service.get_user_by_id(callback.from_user.id).is_finished_diary_today:
+        await callback.answer(  # здесь происходит ебейший калбек.ансуэр
+            text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
+        return
     await FSMFillDiary.fill_quality_sleep.set()
     await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна?',
                                   reply_markup=keyboard_buttons_answer)
@@ -369,7 +291,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_wakingup_by_alam=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Сколько времени за прошедшую ночь вы спали (по ощущениям в формате 00:00)?')
+                           text='Сколько времени за прошедшую ночь вы спали?')
     await FSMFillDiary.next()
 
 
@@ -484,8 +406,11 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await message.answer('Спасибо за заполнение дневника',
                          reply_markup=keyboard_start_buttons)
     session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
+    user = user_service.get_user_by_id(message.from_user.id)
+    user.is_finished_diary_today = True
+    user_service.upsert_user(user)
     await bot.send_message(ADMIN_CHAT_ID,
-                           text=f'''Дневник сна заполнен пользователем по имени {all_users[f'{message.from_user.id}']}, юзернейм: @{message.from_user.username}\n------
+                           text=f'''Дневник сна заполнен пользователем по имени {user.fullname}, юзернейм: @{message.from_user.username}\n------
                            {session['fill_quality_sleep']}\n
                            {session['fill_drowsiness']}\n
                            {session['fill_mood']}\n
@@ -515,7 +440,3 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is not None:
         await state.finish()
-
-
-if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=False, on_startup=on_startup)
