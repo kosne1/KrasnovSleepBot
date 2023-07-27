@@ -295,17 +295,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
     await FSMFillDiary.next()
 
 
-@dp.message_handler(
-    lambda message: not len(message.text) == 5 or not message.text[2] == ':' or not message.text.split(':')[
-        0].isdigit() or not message.text.split(':')[1].isdigit(),
-    state=FSMFillDiary.fill_time_sleeping_night)
-async def process_answer_24_format_invalid(message: Message):
-    return await message.reply("В ответ введите время в 24-х часовом формате, например 00:00")
-
-
-@dp.message_handler(
-    lambda message: 0 <= int(message.text.split(':')[0]) <= 23 and 0 <= int(message.text.split(':')[1]) <= 59,
-    state=FSMFillDiary.fill_time_sleeping_night)
+@dp.message_handler(state=FSMFillDiary.fill_time_sleeping_night)
 async def process_turn_to_next_step(message: Message, state: FSMContext):
     await state.update_data(fill_time_sleeping_night=str(message.text))
     await message.answer(text='Сколько времени вы спали вчера днём ? (в минутах)')
