@@ -2,9 +2,9 @@ from aiogram import types
 from aiogram.types import BotCommand
 
 from app.keyboards import keyboard_start_buttons
+from app.services import user_service
 from app.states import FSMFillName
 from main import dp
-from app.services import user_service
 
 
 async def on_startup(_dp):

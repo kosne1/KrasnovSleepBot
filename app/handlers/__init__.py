@@ -1,11 +1,9 @@
-import datetime
-
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import CallbackQuery, Message
 
-from app import last_fill_timestamp, bot, storage, dp
+from app import bot, storage, dp
 from app.config import ADMIN_CHAT_ID
 from app.keyboards import keyboard_start_buttons, keyboard_buttons_answer, keyboard_buttons_back, \
     keyboard_boolean_buttons, keyboard_by_alarm_buttons
@@ -35,8 +33,7 @@ async def button_back_pressed(callback: CallbackQuery):
 @dp.callback_query_handler(Text(['button_start_fill_pressed']), state='*')
 async def start_filling_diary(callback: CallbackQuery):
     if user_service.get_user_by_id(callback.from_user.id).is_finished_diary_today:
-        await callback.answer(  # здесь происходит ебейший калбек.ансуэр
-            text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
+        await callback.answer(text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
         return
     await FSMFillDiary.fill_quality_sleep.set()
     await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна?',
@@ -424,8 +421,6 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
                             {session['fill_coffein_after_14']}\n
                             {session['fill_use_other_stimulators']}\n
                             {session['fill_comment']}''')
-
-    last_fill_timestamp[str(message.from_user.id)] = int(datetime.datetime.now().timestamp())
 
     current_state = await state.get_state()
     if current_state is not None:
