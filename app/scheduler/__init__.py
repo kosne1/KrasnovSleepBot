@@ -9,11 +9,9 @@ from app.services import user_service
 
 
 async def check_finished_dairy_notification() -> None:
-    current_hour, current_minute = datetime.datetime.today().hour, datetime.datetime.today().minute
+    current_hour = datetime.datetime.today().hour
     users = user_service.get_users()
     for user in users:
-        if current_minute != 0:
-            return
         if current_hour == 0:
             user = user.is_finished_diary_today = False
             user_service.upsert_user(user)
