@@ -393,9 +393,9 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await message.answer('Спасибо за заполнение дневника',
                          reply_markup=keyboard_start_buttons)
     session = storage.data[str(message.chat.id)][str(message.chat.id)]['data']
-    # user = user_service.get_user_by_id(message.from_user.id)
-    # user.is_finished_diary_today = True
-    # user_service.upsert_user(user)
+    user = user_service.get_user_by_id(message.from_user.id)
+    user.is_finished_diary_today = True
+    user_service.upsert_user(user)
     await bot.send_message(ADMIN_CHAT_ID,
                            text=f'''Дневник сна заполнен пользователем по имени {user.fullname}, юзернейм: @{message.from_user.username}\n------
                            {session['fill_quality_sleep']}\n
