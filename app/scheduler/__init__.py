@@ -15,8 +15,7 @@ async def check_finished_dairy_notification() -> None:
         if current_hour == 1:
             user = user.is_finished_diary_today = False
             user_service.upsert_user(user)
-            return
-        if not user.is_finished_diary_today and current_hour in notification_hours:
+        elif not user.is_finished_diary_today and current_hour in notification_hours:
             await bot.send_message(chat_id=user.chat_id, text='Пожалуйста, заполните дневник сна!',
                                    reply_markup=keyboard_start_buttons)
 
