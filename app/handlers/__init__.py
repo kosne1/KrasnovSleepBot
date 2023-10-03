@@ -36,7 +36,7 @@ async def start_filling_diary(callback: CallbackQuery):
         await callback.answer(text='''Вы уже заполнили дневник сна. Попробуйте заполнить дневник снова завтра.''')
         return
     await FSMFillDiary.fill_quality_sleep.set()
-    await callback.message.answer(text='Как вы оцениваете своё сегодняшнее качество сна?',
+    await callback.message.answer(text='Как вы оцениваете своё качество сна этой ночью? (здесь и далее: 10 — это максимальный балл)',
                                   reply_markup=keyboard_buttons_answer)
 
 
@@ -119,7 +119,7 @@ async def process_turn_to_next_step(query: CallbackQuery, state: FSMContext):
         await state.update_data(fill_drowsiness=callback_data_to_text(str(query.data)))
     else:
         await state.update_data(fill_drowsiness=callback_data_to_text(str(query.data)))
-    await query.message.answer('Как вы оцениваете своё настроение вчера в течение дня?',
+    await query.message.answer('Как вы оцениваете своё самочувствие вчера в течение дня?',
                                reply_markup=keyboard_buttons_answer)
     await FSMFillDiary.next()
 
@@ -149,7 +149,7 @@ async def process_turn_to_next_step(query: CallbackQuery, state: FSMContext):
     else:
         await state.update_data(fill_mood=callback_data_to_text(str(query.data)))
     await FSMFillDiary.next()
-    await query.message.answer('Как вы оцениваете своё состояние (бодрость, активность) наутро?',
+    await query.message.answer('Как вы оцениваете своё состояние (бодрость, активность) сегодня утром?',
                                reply_markup=keyboard_buttons_answer)
 
 
@@ -178,7 +178,7 @@ async def process_turn_to_next_step(query: CallbackQuery, state: FSMContext):
     else:
         await state.update_data(fill_selffeeling_morning=callback_data_to_text(str(query.data)))
     await FSMFillDiary.next()
-    await query.message.answer('Во сколько вы вчера легли в кровать?(В ответ напишите время в формате 00:00)',
+    await query.message.answer('Во сколько вы вчера легли в кровать? (В ответ напишите время в формате 00:00)',
                                reply_markup=keyboard_buttons_back)
 
 
@@ -196,7 +196,7 @@ async def process_answer_24_format_invalid(message: types.Message):
     state=FSMFillDiary.fill_time_turn_bed)
 async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await state.update_data(fill_time_turn_bed=str(message.text))
-    await message.answer('Во сколько вы выключили свет и решили заснуть?(В ответ напишите время в формате 00:00)',
+    await message.answer('Во сколько вы выключили свет и решили заснуть? (В ответ напишите время в формате 00:00)',
                          reply_markup=keyboard_buttons_back)
     await FSMFillDiary.next()
 
@@ -215,7 +215,7 @@ async def process_answer_24_format_invalid(message: types.Message):
     state=FSMFillDiary.fill_time_turnoff_ligth)
 async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await state.update_data(fill_time_turnoff_ligth=str(message.text))
-    await message.answer('Сколько примерно у вас ушло времени, чтобы заснуть (в минутах)?',
+    await message.answer('Сколько примерно у вас ушло времени, чтобы заснуть? (Ответ напишите в минутах)',
                          reply_markup=keyboard_buttons_back)
     await FSMFillDiary.next()
 
@@ -237,7 +237,7 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda message: message.text.isdigit(), state=FSMFillDiary.fill_how_many_wakingups)
 async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await state.update_data(fill_how_many_wakingups=str(message.text))
-    await message.answer('Сколько времени суммарно длились эти пробуждения? (в минутах)',
+    await message.answer('Сколько времени суммарно длились эти пробуждения? (Ответ напишите в минутах)',
                          reply_markup=keyboard_buttons_back)
     await FSMFillDiary.next()
 
@@ -252,7 +252,7 @@ async def process_answer_1_10_invalid(message: types.Message):
 @dp.message_handler(lambda message: message.text.isdigit(), state=FSMFillDiary.fill_sum_wakingups_time_minutes)
 async def process_turn_to_next_step(message: types.Message, state: FSMContext):
     await state.update_data(fill_sum_wakingups_time_minutes=int(message.text))
-    await message.answer('Во сколько было ваше финальное пробуждение?(В ответ напишите время в формате 00:00)',
+    await message.answer('Во сколько было ваше финальное пробуждение? (В ответ напишите время в формате 00:00)',
                          reply_markup=keyboard_buttons_back)
     await FSMFillDiary.next()
 
@@ -288,14 +288,14 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_wakingup_by_alam=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Сколько времени за прошедшую ночь вы спали?')
+                           text='Сколько времени за прошедшую ночь вы спали? (Ответ напишите в свободной форме)')
     await FSMFillDiary.next()
 
 
 @dp.message_handler(state=FSMFillDiary.fill_time_sleeping_night)
 async def process_turn_to_next_step(message: Message, state: FSMContext):
     await state.update_data(fill_time_sleeping_night=str(message.text))
-    await message.answer(text='Сколько времени вы спали вчера днём ? (в минутах)')
+    await message.answer(text='Сколько времени вы спали вчера днём? (Ответ напишите в минутах)')
     await FSMFillDiary.next()
 
 
@@ -347,7 +347,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_use_narcos=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Занимались ли вы вчера в течение дня медитацией\дыхательными\другими релаксационными практиками?',
+                           text='Занимались ли вы вчера в течение дня медитацией, дыхательными или другими релаксационными практиками?',
                            reply_markup=keyboard_boolean_buttons)
     await FSMFillDiary.next()
 
@@ -356,7 +356,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_meditate=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Пили ли Вы вчера напитки с кофеином до 14 часов дня?',
+                           text='Пили ли вы вчера напитки, содержащие кофеин, до 14 часов дня?',
                            reply_markup=keyboard_boolean_buttons)
     await FSMFillDiary.next()
 
@@ -365,7 +365,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_coffein_before_14=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Пили ли Вы вчера напитки с кофеином после 14 часов дня?',
+                           text='Пили ли вы вчера напитки, содержащие кофеин, после 14 часов дня?',
                            reply_markup=keyboard_boolean_buttons)
     await FSMFillDiary.next()
 
@@ -383,7 +383,7 @@ async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMCont
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_use_other_stimulators=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Оставить комментарий (факторы, которые могли повлиять на сон):')
+                           text='Отметьте иные факторы, которые могли повлиять на качество вашего сна:')
     await FSMFillDiary.next()
 
 
