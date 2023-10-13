@@ -13,8 +13,6 @@ class FSMFillDiary(StatesGroup):
     fill_sum_wakingups_time_minutes = State()
     fill_time_final_wakingup = State()
     fill_wakingup_earlier = State()
-    fill_wakingup_by_alam = State()
-    fill_time_sleeping_night = State()
     fill_time_sleeping_day = State()
     fill_did_sport = State()
     fill_drink_alcohol = State()

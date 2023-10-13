@@ -279,23 +279,7 @@ async def process_turn_to_next_step(message: Message, state: FSMContext):
 async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
     await state.update_data(fill_wakingup_earlier=callback_data_to_text(str(callback.data)))
     await bot.send_message(callback.message.chat.id,
-                           text='Вы проснулись по будильнику?',
-                           reply_markup=keyboard_by_alarm_buttons)
-    await FSMFillDiary.next()
-
-
-@dp.callback_query_handler(state=FSMFillDiary.fill_wakingup_by_alam)
-async def process_button_boolean_pressed(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(fill_wakingup_by_alam=callback_data_to_text(str(callback.data)))
-    await bot.send_message(callback.message.chat.id,
-                           text='Сколько времени за прошедшую ночь вы спали? (Ответ напишите в свободной форме)')
-    await FSMFillDiary.next()
-
-
-@dp.message_handler(state=FSMFillDiary.fill_time_sleeping_night)
-async def process_turn_to_next_step(message: Message, state: FSMContext):
-    await state.update_data(fill_time_sleeping_night=str(message.text))
-    await message.answer(text='Сколько времени вы спали вчера днём? (Ответ напишите в минутах)')
+                           text='Сколько времени вы спали вчера днём? (Ответ напишите в минутах)')
     await FSMFillDiary.next()
 
 
@@ -409,8 +393,6 @@ async def process_turn_to_next_step(message: types.Message, state: FSMContext):
                            {session['fill_sum_wakingups_time_minutes']}\n
                            {session['fill_time_final_wakingup']}\n
                             {session['fill_wakingup_earlier']}\n
-                            {session['fill_wakingup_by_alam']}\n
-                            {session['fill_time_sleeping_night']}\n
                             {session['fill_time_sleeping_day']}\n
                             {session['fill_did_sport']}\n
                             {session['fill_drink_alcohol']}\n
