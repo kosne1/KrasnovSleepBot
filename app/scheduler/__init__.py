@@ -21,7 +21,7 @@ async def check_finished_dairy_notification() -> None:
                 await bot.send_message(chat_id=user.chat_id, text='Пожалуйста, заполните дневник сна!',
                                        reply_markup=keyboard_start_buttons)
         except Exception as e:
-            log_file.write(f"[ERROR {datetime.datetime.now()}]: {str(user)}, {str(e)}")
+            log_file.write(f"[ERROR {datetime.datetime.now()}]")
 
 
 scheduler = AsyncIOScheduler()
